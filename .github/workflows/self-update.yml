@@ -1,0 +1,57 @@
+name: self-update
+
+# The tap follows the monorepo's releases on its own: an hourly check
+# against upyesp/epher's latest release, a cask bump when the version
+# moved. Inside this repo the workflow token has contents:write, so the
+# channel needs no cross-repo secret; the lag behind a train tag is at
+# most an hour, the same lag Package Control has. Never downgrades: a
+# tag older than the cask is ignored (tags are never re-pointed, and a
+# deleted re-release must not roll the channel back).
+
+on:
+  schedule:
+    - cron: "25 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: follow the latest epher release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump the cask if the monorepo moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          current="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/epher.rb)"
+          tag="$(gh release view --repo upyesp/epher --json tagName --jq .tagName)"
+          latest="${tag#v}"
+          echo "cask: $current, latest release: $latest ($tag)"
+          if [ "$latest" = "$current" ]; then
+            echo "up to date"
+            exit 0
+          fi
+          older="$(printf '%s\n%s\n' "$latest" "$current" | sort -V | head -1)"
+          if [ "$older" = "$latest" ]; then
+            echo "the cask is ahead of the latest release; leaving it alone"
+            exit 0
+          fi
+          url="https://github.com/upyesp/epher/releases/download/$tag/epher-macos-aarch64.dmg"
+          curl -fsSL "$url" -o /tmp/epher.dmg
+          sha="$(shasum -a 256 /tmp/epher.dmg | cut -d' ' -f1)"
+          sed -i "s/^  version \"${current}\"/  version \"${latest}\"/" Casks/epher.rb
+          sed -i "s/^  sha256 \".*\"/  sha256 \"${sha}\"/" Casks/epher.rb
+          grep -q "version \"${latest}\"" Casks/epher.rb
+          grep -q "sha256 \"${sha}\"" Casks/epher.rb
+          git config user.name "epher train bot"
+          git config user.email "train@epher.org"
+          git add Casks/epher.rb
+          git commit -m "cask: epher ${latest} (from ${tag})"
+          git push
+          echo "bumped to ${latest}"
