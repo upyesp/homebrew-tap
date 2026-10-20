@@ -49,9 +49,20 @@ jobs:
           sed -i "s/^  sha256 \".*\"/  sha256 \"${sha}\"/" Casks/epher.rb
           grep -q "version \"${latest}\"" Casks/epher.rb
           grep -q "sha256 \"${sha}\"" Casks/epher.rb
+          git add Casks/epher.rb
+          # The formula rides the same bump (ADR-0076): same version, its
+          # own digest, its own artifact (the CLI tarball, not the DMG).
+          if [ -f Formula/epher.rb ]; then
+            curl -fsSL "https://github.com/upyesp/epher/releases/download/$tag/epher-macos-aarch64.tar.gz" -o /tmp/epher.tar.gz
+            fsha="$(shasum -a 256 /tmp/epher.tar.gz | cut -d' ' -f1)"
+            sed -i "s/^  version \"${current}\"/  version \"${latest}\"/" Formula/epher.rb
+            sed -i "s/^  sha256 \".*\"/  sha256 \"${fsha}\"/" Formula/epher.rb
+            grep -q "version \"${latest}\"" Formula/epher.rb
+            grep -q "sha256 \"${fsha}\"" Formula/epher.rb
+            git add Formula/epher.rb
+          fi
           git config user.name "epher train bot"
           git config user.email "train@epher.org"
-          git add Casks/epher.rb
-          git commit -m "cask: epher ${latest} (from ${tag})"
+          git commit -m "epher ${latest} (from ${tag})"
           git push
           echo "bumped to ${latest}"
