@@ -1,12 +1,12 @@
 class Epher < Formula
   desc "Calculator language with live answers, 2D and 3D graphs, and a terminal command (CLI + TUI)"
   homepage "https://epher.org/"
-  version "0.9.1"
+  version "0.9.2"
   # All zeros until the first train that ships the tarball (ADR-0076):
   # the tap's self-update workflow replaces this line with the real
   # digest when the 0.5.93 release lands, so this formula only ever
   # installs from 0.5.93 onward.
-  sha256 "cc573ee19cf6d6459f70baf803f542a16c6e74aca75fa5a158d353a16352c314"
+  sha256 "da843119a4a4b31b43c93c9fb9dcda8206c084e8098b493f10fab7f7149c4817"
 
   url "https://github.com/upyesp/epher/releases/download/v#{version}/epher-macos-aarch64.tar.gz"
   # Apple Silicon only (ADR-0025): an Intel mac gets Homebrew's clean
