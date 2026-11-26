@@ -1,6 +1,6 @@
 cask "epher" do
-  version "0.9.26"
-  sha256 "a079f9896cff198072fffca23d975cb967a93a362e4c24ad82f7d040dea557e2"
+  version "0.9.27"
+  sha256 "a7d2ae8df082e73f473b9e7f86d845b2e19fefbf72e86e97caf3cfd5d97f2d0f"
 
   url "https://github.com/upyesp/epher/releases/download/v#{version}/epher-macos-aarch64.dmg"
   name "epher"
